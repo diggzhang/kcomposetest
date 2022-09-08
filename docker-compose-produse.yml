@@ -1,0 +1,63 @@
+networks:
+  pipeline-network:
+    driver: bridge
+services:
+  backend:
+    environment:
+      MAGICBEAN_VERSION: 2.7.6
+      MB_CORS_ALLOWED_ORIGINS: http://localhost:9010
+      MB_HIVE_THRIFT_PASSWORD: '123456'
+      MB_HIVE_THRIFT_USERNAME: postgres
+      MB_POSTGRES_PWD: '123456'
+      MB_POSTGRES_USER: postgres
+    image: hykpi/hykpi_backend:2.7.6
+    networks:
+      pipeline-network: null
+    ports: 
+      - 80
+    restart: always
+  db:
+    command: postgres -c listen_addresses='*'
+    environment:
+      MAGICBEAN_VERSION: 2.7.6
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_DB: modou
+      POSTGRES_PASSWORD: '123456'
+      POSTGRES_USER: postgres
+    image: postgres:13.1
+    networks:
+      pipeline-network: null
+    volumes:
+    - /Users/mac/Code/work/magicbean-compose/pgdata:/var/lib/postgresql/data:rw
+  hykpi_hive_db:
+    command: postgres -c listen_addresses='*'
+    environment:
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_DB: modou_hive
+      POSTGRES_PASSWORD: '123456'
+      POSTGRES_USER: postgres
+    image: hykpi/hykpi_hive_db:2.6.0
+    networks:
+      pipeline-network: null
+  pipeline:
+    environment:
+      MAGICBEAN_VERSION: 2.7.6
+      MODOU_HIVE_PASSWORD: '123456'
+      MODOU_HIVE_USER: postgres
+    image: hykpi/hykpi_pipeline:2.7.6
+    networks:
+      pipeline-network: null
+    restart: always
+    volumes:
+    - /Users/mac/Code/work/magicbean-compose/pipeline/hykpi_workspace:/modou/workspace:rw
+  rabbitmq:
+    environment:
+      DEFAULT_PASS: guest
+      DEFAULT_USER: guest
+    image: rabbitmq:3.8-management-alpine
+    networks:
+      pipeline-network: null
+version: '3'
+volumes:
+  db-data: {}
+
